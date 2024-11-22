@@ -30,9 +30,9 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          docker build -t myapp:${{ github.sha }} .
+          docker build -t myapp:${{ github.ref_name }}_${{ github.event.head_commit.message }} .
           docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-          docker push myapp:${{ github.sha }}
+          docker push avashskya/go-leaf:${{ github.ref_name }}_${{ github.event.head_commit.message }}
 
   deploy:
     needs: build
