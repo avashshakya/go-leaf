@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [staging]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.23"
+
+      - name: Build Application
+        run: |
+          go mod tidy
+          go build -o app
+
+      - name: Run Tests
+        run: go test ./...
+
+      - name: Docker Build & Push
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          docker build -t myapp:${{ github.sha }} .
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          docker push myapp:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-southeast-1-bkk-1a
+      EKS_CLUSTER_NAME: go-leaf
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kube config
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.3
+
+      - name: Deploy to EKS
+        run: |
+          helm upgrade --install myapp ./helm \
+            --namespace default \
+            --set image.tag=${{ github.sha }} \
+            --wait --timeout 5m

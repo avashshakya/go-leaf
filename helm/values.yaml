@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: your-registry/go-app
+  repository: avashskya/go-leaf
   tag: latest
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 resources:
   limits:
