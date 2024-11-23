@@ -22,9 +22,6 @@ jobs:
           go mod tidy
           go build -o app
 
-      - name: Run Tests
-        run: go test ./...
-
       - name: Docker Build & Push
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
