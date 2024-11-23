@@ -1,10 +1,10 @@
-name: CI/CD Pipeline
+name: CI/CD
 
 on:
   push:
-    branches: [staging]
-  pull_request:
-    branches: [main]
+    branches: [ staging, main ]
+#  pull_request:
+#    branches: [main]
 
 jobs:
   build:
@@ -29,16 +29,18 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ github.ref_name }}-${{ github.event.head_commit.message }}
         run: |
-          docker build -t avashskya/go-leaf:${{ github.ref_name }}_${{ github.event.head_commit.message }} .
-          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-          docker push avashskya/go-leaf:${{ github.ref_name }}_${{ github.event.head_commit.message }}
+          docker build -t avashskya/go-leaf:$IMAGE_TAG .
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+#         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+          docker push avashskya/go-leaf:$IMAGE_TAG
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: ap-southeast-1-bkk-1a
+      AWS_REGION: ap-southeast-1
       EKS_CLUSTER_NAME: go-leaf
 
     steps:
@@ -51,17 +53,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update kube config
-        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      - name: Update kube config for production
+        if: ${{ github.ref_name == 'main' }}
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}-prod --region ${{ env.AWS_REGION }}
+
+      - name: Update kube config for staging
+        if: $ {{ github.ref_name == 'staging' }}
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}-staging --region ${{ env.AWS_REGION }}
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.12.3
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Deploy to EKS
+        env:
+          IMAGE_TAG: ${{ github.ref_name}}-${{ github.event.head_commit.message }}
         run: |
-          helm upgrade --install myapp ./helm \
+          helm upgrade --install go-leaf ./helm \
             --namespace default \
-            --set image.tag=${{ github.sha }} \
+            --set image.tag=$IMAGE_TAG \
             --wait --timeout 5m

@@ -1,0 +1,18 @@
+Environment-specific configurations:
+
+Production: 3 nodes (min 2, max 5) using t3.large instances
+Staging: 2 nodes (min 1, max 3) using t3.medium instances
+
+
+Networking:
+
+Separate VPC for each environment
+Production: Multi-AZ NAT gateways for high availability
+Staging: Single NAT gateway to reduce costs
+
+
+Security:
+
+Private subnets for worker nodes
+Public access to cluster API (can be restricted if needed)
+Proper tagging for AWS Load Balancer integration
