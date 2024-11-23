@@ -58,7 +58,7 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}-prod --region ${{ env.AWS_REGION }}
 
       - name: Update kube config for staging
-        if: $ {{ github.ref_name == 'staging' }}
+        if: ${{ github.ref_name == 'staging' }}
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}-staging --region ${{ env.AWS_REGION }}
 
       - name: Install Helm
@@ -69,7 +69,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.ref_name}}-${{ github.event.head_commit.message }}
         run: |
-          helm upgrade --install go-leaf ./helm \
+          helm upgrade --install go-leaf ./go-leaf \
             --namespace default \
             --set image.tag=$IMAGE_TAG \
             --wait --timeout 5m
