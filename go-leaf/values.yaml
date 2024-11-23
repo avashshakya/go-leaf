@@ -15,7 +15,7 @@ service:
 securityContext:
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1000
@@ -24,15 +24,22 @@ livenessProbe:
   httpGet:
     path: /health
     port: 8080
-    initialDelaySeconds: 5
-    periodSeconds: 30
+    scheme: HTTP
+  periodSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+  timeoutSeconds: 1
 
 readinessProbe:
   httpGet:
     path: /health
     port: 8080
-    initialDelaySeconds: 5
-    periodSeconds: 10
+    scheme: HTTP
+  periodSeconds: 10
+  failureThreshold: 3
+  successThreshold: 2
+  timeoutSeconds: 1
+  initialDelaySeconds: 5
 
 autoscaling:
   enabled: true
@@ -40,3 +47,7 @@ autoscaling:
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
 
+persistentVolume:
+  capacity: 10Gi
+  path_on_host: /appdata
+  path_in_pod: /logs

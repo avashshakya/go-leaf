@@ -36,3 +36,10 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: {{ .Values.persistentVolume.path_in_pod }}
+              name: {{ .Release.Name }}-pvc
+      volumes:
+        - name: {{ .Release.Name }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name}}-pvc

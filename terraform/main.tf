@@ -1,40 +1,7 @@
-# Provider configuration
 provider "aws" {
-  region = var.aws_region
-}
-
-# Variables
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "ap-southeast-1"
-}
-
-variable "environments" {
-  description = "Environment configurations"
-  type = map(object({
-    cluster_version = string
-    desired_size    = number
-    min_size        = number
-    max_size        = number
-    instance_types  = list(string)
-  }))
-  default = {
-    prod = {
-      cluster_version = "1.30"
-      desired_size    = 3
-      min_size        = 2
-      max_size        = 5
-      instance_types  = ["t2.medium"]
-    }
-    staging = {
-      cluster_version = "1.30"
-      desired_size    = 1
-      min_size        = 1
-      max_size        = 3
-      instance_types  = ["t2.small"]
-    }
-  }
+  region     = var.aws_region
+  access_key = var.aws_access_key_id
+  secret_key = var.aws_secret_access_key
 }
 
 # VPC Module
@@ -47,9 +14,9 @@ module "vpc" {
   name = "eks-vpc-${each.key}"
   cidr = each.key == "prod" ? "10.0.0.0/16" : "10.1.0.0/16"
 
-  azs             = ["${var.aws_region}a", "${var.aws_region}b", "${var.aws_region}c"]
-  private_subnets = each.key == "prod" ? ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"] : ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
-  public_subnets  = each.key == "prod" ? ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"] : ["10.1.4.0/24", "10.1.5.0/24", "10.1.6.0/24"]
+  azs             = ["${var.aws_region}a", "${var.aws_region}b"]
+  private_subnets = each.key == "prod" ? ["10.0.1.0/24", "10.0.2.0/24"] : ["10.1.1.0/24", "10.1.2.0/24"]
+  public_subnets  = each.key == "prod" ? ["10.0.4.0/24", "10.0.5.0/24"] : ["10.1.4.0/24", "10.1.5.0/24"]
 
   enable_nat_gateway = true
   single_nat_gateway = each.key == "staging" ? true : false
