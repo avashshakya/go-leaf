@@ -21,7 +21,6 @@ jobs:
         run: |
           go mod tidy
           go build -o app
-
       - name: Docker Build & Push
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
