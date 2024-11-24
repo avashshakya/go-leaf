@@ -31,10 +31,10 @@ jobs:
             docker build -t avashskya/go-leaf:${{ github.ref_name }}-${{ github.event.head_commit.message }} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push avashskya/go-leaf:${{ github.ref_name }}-${{ github.event.head_commit.message }}
-          elif [ $GITHUB_EVENT_NAME == 'pull_request']; then
-            docker build -t avashskya/go-leaf:${{ github.ref_name }}-${{ github.event.head_commit.message }} .
+          elif [ $GITHUB_EVENT_NAME == 'pull_request' ]; then
+            docker build -t avashskya/go-leaf:${{ github.event.pull_request.head.ref }}-${{ github.event.head_commit.message }} .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push avashskya/go-leaf:${{ github.event.pull_request.title }}-${{ github.event.head_commit.message }}
+            docker push avashskya/go-leaf:${{ github.event.pull_request.head.ref }}-${{ github.event.head_commit.message }}
           fi
 
   deploy:
@@ -73,8 +73,8 @@ jobs:
               --namespace default \
               --set image.tag=${{ github.ref_name }}-${{ github.event.head_commit.message }} \
               --wait --timeout 5m
-          elif [ $GITHUB_EVENT_NAME == 'pull_request']; then
+          elif [ $GITHUB_EVENT_NAME == 'pull_request' ]; then
             helm upgrade --install go-leaf ./go-leaf \
               --namespace default \
-              --set image.tag=${{ github.event.pull_request.title }}-${{ github.event.head_commit.message }} \
+              --set image.tag=${{ github.event.pull_request.head.ref }}-${{ github.event.head_commit.message }} \
               --wait --timeout 5m
