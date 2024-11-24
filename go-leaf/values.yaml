@@ -5,12 +5,13 @@ image:
   pullPolicy: IfNotPresent
   tag: ""
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+# imagePullSecrets: []
+# nameOverride: ""
+# fullnameOverride: ""
 
 service:
-  port: 8080
+  type: LoadBalancer
+  port: 80
 
 securityContext:
   capabilities:
